@@ -29,3 +29,59 @@ data = [(img, os.path.splitext(img)[0] + ".csv") for img in images if os.path.sp
 train, temp = train_test_split(data, test_size=(1 - SPLIT_RATIOS[0]), random_state=42)
 val, test = train_test_split(temp, test_size=SPLIT_RATIOS[2] / (SPLIT_RATIOS[1] + SPLIT_RATIOS[2]), random_state=42)
 
+def convert_csv_to_yolo(csv_path, img_width, img_height):
+    df = pd.read_csv(csv_path)
+    label_txt = ""
+
+    for _, row in df.iterrows():
+        cls_name = row['class']
+        if cls_name not in CLASS_MAP:
+            continue 
+
+        cls_id = CLASS_MAP[cls_name]
+        xmin, ymin, xmax, ymax = row['xmin'], row['ymin'], row['xmax'], row['ymax']
+        x_center = (xmin + xmax) / (2 * img_width)
+        y_center = (ymin + ymax) / (2 * img_height)
+        bbox_width = (xmax - xmin) / img_width
+        bbox_height = (ymax - ymin) / img_height
+
+        label_txt += f"{cls_id} {x_center:.6f} {y_center:.6f} {bbox_width:.6f} {bbox_height:.6f}\n"
+
+    return label_txt
+
+def process_dataset(subset, subset_name):
+    for img_file, csv_file in subset:
+        img_path = os.path.join(DATASET_DIR, img_file)
+        csv_path = os.path.join(DATASET_DIR, csv_file)
+
+        if not os.path.exists(img_path) or not os.path.exists(csv_path):
+            continue  
+
+        try:
+            df = pd.read_csv(csv_path)
+            if df.empty:
+                df = None 
+                continue  
+            
+            img_width, img_height = df.iloc[0]['width'], df.iloc[0]['height']
+            
+            label_txt = convert_csv_to_yolo(csv_path, img_width, img_height)
+            label_filename = os.path.splitext(img_file)[0] + ".txt"
+
+            shutil.move(img_path, os.path.join(DATASET_DIR, subset_name, "images", img_file))
+
+            label_path = os.path.join(DATASET_DIR, subset_name, "labels", label_filename)
+            with open(label_path, "w") as f:
+                f.write(label_txt)
+
+            df = None  
+            os.remove(csv_path)
+
+        except Exception as e:
+            print(f"Error processing {csv_path}: {e}")
+
+process_dataset(train, "train")
+process_dataset(val, "val")
+process_dataset(test, "test")
+
+print("Dataset successfully converted and rearranged!")
