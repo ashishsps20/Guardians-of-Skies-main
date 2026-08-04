@@ -30,3 +30,44 @@ def get_yolo_bbox(mask):
     
     return cx, cy, w, h
 
+def process_split(split_name):
+    """Process train, valid, or test splits"""
+    images_path = os.path.join(DATASET_DIR, split_name, "images")
+    labels_path = os.path.join(DATASET_DIR, split_name, "labels")
+
+    os.makedirs(labels_path, exist_ok=True)
+
+    image_files = glob(os.path.join(images_path, "*.jpg")) + glob(os.path.join(images_path, "*.png"))
+
+    for image_file in image_files:
+        img = cv2.imread(image_file)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        predictor.set_image(img_rgb)
+
+        masks, _, _ = predictor.predict(point_coords=None, point_labels=None, multimask_output=True)
+        
+        label_file = os.path.join(labels_path, os.path.basename(image_file).replace(".jpg", ".txt").replace(".png", ".txt"))
+
+        if os.path.exists(label_file):
+            os.remove(label_file)
+
+        with open(label_file, "w") as f:
+            for mask in masks:
+                bbox = get_yolo_bbox(mask)
+                if bbox:
+                    cx, cy, w, h = bbox
+                    cx /= img.shape[1] 
+                    cy /= img.shape[0] 
+                    w /= img.shape[1] 
+                    h /= img.shape[0] 
+
+                    class_id = 0 
+                    f.write(f"{class_id} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}\n")
+
+        print(f"Processed {image_file}")
+
+for split in ["train", "valid", "test"]:
+    print(f"Processing {split} set...")
+    process_split(split)
+    
+print("✅ SAM segmentation complete! YOLO labels updated.")
