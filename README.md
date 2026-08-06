@@ -6,7 +6,6 @@
 ![YOLOv8](https://img.shields.io/badge/Model-YOLOv8-8A2BE2)
 ![Streamlit](https://img.shields.io/badge/App-Streamlit-FF4B4B)
 ![PyTorch](https://img.shields.io/badge/Backend-PyTorch-EE4C2C)
-![Status](https://img.shields.io/badge/Status-Hackathon%20Prototype-yellow)
 
 SkyWarden is a computer-vision system that detects military aircraft in aerial images, classifies each as friendly or enemy, and raises an alert the moment a hostile aircraft is spotted.
 
@@ -61,4 +60,49 @@ Detection and classification happen in a single YOLOv8 pass (one model predicts 
 - **Web interface** — drag-and-drop image upload via Streamlit, no setup beyond installing dependencies.
 - **Reproducible training pipeline** — scripts to go from raw labeled data to a trained YOLOv8 checkpoint, including SAM-assisted auto-labeling.
 
+## Demo
+
+| Sample input | Model validation predictions |
+|---|---|
+| ![Sample aircraft image](images/sample_f16.jpg) | ![Validation batch predictions](results/val_batch0_pred.jpg) |
+
+More raw sample inputs are in `images/`. Full evaluation plots and validation prediction grids from training are in `results/`. Note the grid above is YOLO's standard per-class training visualization — the live app's actual output uses green/red boxes for the friend/enemy call instead.
+
+> If these don't render wherever you're previewing this file, it's because `images/` and `results/` need to sit alongside the README — the paths are relative to the repo, not broken links.
+
+## Tech Stack
+
+**Deep Learning & Computer Vision**
+- [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) — object detection
+- [PyTorch](https://pytorch.org/) — model backend
+- [OpenCV](https://opencv.org/) — image processing & annotation
+- [Segment Anything (SAM)](https://github.com/facebookresearch/segment-anything) — automated bounding-box labeling
+
+**Data & Evaluation**
+- [NumPy](https://numpy.org/) · [Pandas](https://pandas.pydata.org/) · [Matplotlib](https://matplotlib.org/) · [scikit-learn](https://scikit-learn.org/)
+
+**Application**
+- [Streamlit](https://streamlit.io/) — web interface
+- [python-dotenv](https://pypi.org/project/python-dotenv/) — environment configuration
+
+## Project Structure
+
+```
+SkyWarden/
+├── app.py                              # Streamlit app: detection + friend/enemy alerting
+├── requirements.txt                    # Python dependencies
+├── model                               # Pointer file — link to trained weights (see Getting Started)
+├── images/                             # Sample aircraft images used for docs/demo
+├── preprocessing/
+│   ├── dataset_split_preprocessing.py  # CSV → YOLO labels, train/val/test split
+│   ├── crop_preprocessing.py           # Restructures cropped, per-class images for classification training
+│   └── SAM_Bounding_Box.py             # Auto-generates bounding boxes with Segment Anything
+├── training/
+│   ├── Full_Frame_Train.py             # Trains YOLOv8 on full aerial frames
+│   ├── full_frame_freeze_train.py      # Resumes training with backbone frozen
+│   └── crop_classification_train.py    # Fine-tunes on cropped, single-aircraft images
+├── results/                            # Training curves & evaluation plots
+├── .gitignore
+└── README.md
+```
 
