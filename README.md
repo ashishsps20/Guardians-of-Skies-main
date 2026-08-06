@@ -105,4 +105,67 @@ SkyWarden/
 ├── .gitignore
 └── README.md
 ```
+## Getting Started
+
+### Prerequisites
+
+- Python 3.9+
+- pip (or conda)
+- A CUDA-capable GPU is recommended for training, but not required for running the app with a pre-trained checkpoint
+
+### Installation
+
+```bash
+git clone https://github.com/ashishsps20/SkyWarden.git
+cd SkyWarden
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+`requirements.txt` covers both the app and the preprocessing/training scripts.
+
+### Model Weights
+
+Trained weights aren't checked into the repo (see `.gitignore`). Download them from the link in the `model` file and note the local path.
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+YOLO_MODEL_PATH=/path/to/your/trained/model.pt
+```
+
+### Run the App
+
+```bash
+streamlit run app.py
+```
+
+Open the local URL Streamlit prints (typically `http://localhost:8501`), upload an aerial image, and view the annotated result.
+
+## How It Works
+
+1. **Label preparation** — `dataset_split_preprocessing.py` converts the dataset's CSV bounding-box annotations into YOLO-format `.txt` labels and splits the data 70/20/10 into train/val/test.
+2. **Auto-labeling (optional)** — `SAM_Bounding_Box.py` runs Meta's Segment Anything Model over unlabeled images and converts the resulting masks into YOLO-format boxes.
+3. **Classification data prep** — `crop_preprocessing.py` restructures a folder of cropped, per-class aircraft images into the same YOLO layout (one full-image box per crop) for a classification-style fine-tuning pass.
+4. **Training** — `Full_Frame_Train.py` trains YOLOv8 on full aerial frames for 20 epochs; `full_frame_freeze_train.py` resumes from a checkpoint with the first 20 layers frozen for 10 more epochs; `crop_classification_train.py` fine-tunes the same way on cropped images.
+5. **Inference** — `app.py` loads the trained checkpoint, runs detection on the uploaded image, and checks each predicted class name against two static allegiance lists (`friend_classes`, `enemy_classes`) to color-code boxes and trigger the enemy-detected alert.
+
+## Dataset
+
+Trained on the [Military Aircraft Detection Dataset](https://www.kaggle.com/datasets/a2015003713/militaryaircraftdetectiondataset/data) from Kaggle — 77 labeled aircraft classes spanning fighters, bombers, transports, helicopters, and UAVs, used for both detection (full frame) and classification (cropped) training.
+
+## Results
+
+Training ran for 20 epochs on the full-frame detector. These are approximate values read from the training curves in `results/results.png`, not exact logged metrics — see `results/` for the full confusion matrix and PR/F1 curves.
+
+| Metric | Value |
+|---|---:|
+| Precision | ~0.78 |
+| Recall | ~0.69 |
+| mAP@50 | ~0.76 |
+| mAP@50–95 | ~0.70 |
+| Classes | 77 |
 
