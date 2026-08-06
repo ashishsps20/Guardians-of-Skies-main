@@ -1,0 +1,14 @@
+# Core app (Streamlit UI + inference)
+streamlit
+opencv-python-headless==4.8.1.78
+torch
+ultralytics
+numpy
+matplotlib
+pillow
+python-dotenv
+
+# Preprocessing & training
+pandas
+scikit-learn
+segment-anything
