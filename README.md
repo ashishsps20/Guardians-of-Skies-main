@@ -169,3 +169,62 @@ Training ran for 20 epochs on the full-frame detector. These are approximate val
 | mAP@50–95 | ~0.70 |
 | Classes | 77 |
 
+## Known Limitations
+
+- **Dependencies aren't version-pinned** — `requirements.txt` lists packages without specific versions; pin them once you've confirmed a working set.
+- **No license file** — see [License](#license).
+- **Hardcoded paths** — the preprocessing and training scripts use local Windows paths (`C:\arpan\...`) and Kaggle paths (`/kaggle/working/...`) that need updating before running elsewhere.
+- **Class-name mismatch** — `app.py`'s `friend_classes` list includes `"FA18"`, while `dataset_split_preprocessing.py`'s `CLASS_NAMES` uses `"F18"` for the same aircraft. Worth confirming against your trained model's actual `model.names` so F/A-18 detections aren't miscategorized as "Unknown."
+- **Static allegiance list** — friend/enemy status is a hardcoded lookup in `app.py`, not a learned or configurable property; relabeling an aircraft means editing source code.
+
+## Roadmap
+
+- [ ] Pin versions in `requirements.txt`
+- [ ] Move `friend_classes` / `enemy_classes` into an external config (JSON/YAML)
+- [ ] Add batch and video/stream inference
+- [ ] Add automated tests for the preprocessing pipeline
+- [ ] Containerize with Docker for easier setup
+- [ ] Publish a versioned model release instead of a Drive link
+- [ ] Expose detection through a REST API
+- [ ] Export the model to ONNX for broader deployment options
+
+## Contributing
+
+Contributions are welcome:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m "Add your feature"`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a pull request
+
+## License
+
+No license has been specified for this project yet, so all rights are reserved by the authors by default. Consider adding an [MIT](https://choosealicense.com/licenses/mit/), [Apache 2.0](https://choosealicense.com/licenses/apache-2.0/), or similar open-source license if you want others to use or build on this code.
+
+## Acknowledgments
+
+- [Ultralytics](https://github.com/ultralytics/ultralytics) for YOLOv8
+- [Meta AI](https://github.com/facebookresearch/segment-anything) for Segment Anything (SAM)
+- [a2015003713](https://www.kaggle.com/a2015003713) for the Military Aircraft Detection Dataset on Kaggle
+
+## Citation
+
+If you use SkyWarden in research or a derivative project, please cite this repository:
+
+```
+SkyWarden — Military Aircraft Detection & Friend/Enemy Classification
+https://github.com/ashishsps20/SkyWarden
+```
+
+## Support
+
+For questions, bug reports, or feature requests, please open an issue in this repository.
+
+## Contributors
+
+| Name | Role | GitHub |
+|---|---|---|
+| Ashish Gautam | Project Maintainer | [@ashishsps20](https://github.com/ashishsps20) |
+| Arpan Pethkar | Core Contributor | [@Arpan01574](https://github.com/Arpan01574) |
+
